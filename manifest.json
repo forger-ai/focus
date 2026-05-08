@@ -1,8 +1,15 @@
 {
   "name": "focus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local calendar notes app with configurable entry types, Personal Agent support, and Gmail-assisted entry creation.",
   "changelog": [
+    {
+      "version": "0.1.1",
+      "summary": "Adds the Focus catalog icon.",
+      "changes": [
+        "Publishes the Focus app icon in catalog metadata."
+      ]
+    },
     {
       "version": "0.1.0",
       "summary": "Initial Focus app.",
