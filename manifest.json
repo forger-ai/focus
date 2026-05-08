@@ -31,6 +31,7 @@
   },
   "catalog": {
     "display_name": "Focus",
+    "icon_path": "frontend/public/focus-logo.png",
     "short_description": "Local calendar notes with Gmail-assisted planning.",
     "description": "Focus helps one person keep calendar notes in a local monthly view, organize entries by configurable colors, and use a Personal Agent to turn recent Gmail findings into dated entries.",
     "category": "productivity",
