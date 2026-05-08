@@ -1,0 +1,144 @@
+{
+  "name": "focus",
+  "version": "0.1.0",
+  "description": "Local calendar notes app with configurable entry types, Personal Agent support, and Gmail-assisted entry creation.",
+  "changelog": [
+    {
+      "version": "0.1.0",
+      "summary": "Initial Focus app.",
+      "changes": [
+        "Adds a monthly calendar with multiple entries per day, optional entry times, drag-and-drop date changes, and configurable entry type colors.",
+        "Adds a Personal Agent for operating the Focus calendar through app tools.",
+        "Declares Gmail search and read permissions for agent-assisted email-to-calendar entry creation."
+      ]
+    }
+  ],
+  "stack": {
+    "backend": {
+      "language": "python",
+      "framework": "fastapi",
+      "package_manager": "uv",
+      "database": "sqlite",
+      "python_version": "3.12"
+    },
+    "frontend": {
+      "language": "typescript",
+      "framework": "react",
+      "bundler": "vite",
+      "ui": "mui",
+      "node_version": "24"
+    }
+  },
+  "catalog": {
+    "display_name": "Focus",
+    "short_description": "Local calendar notes with Gmail-assisted planning.",
+    "description": "Focus helps one person keep calendar notes in a local monthly view, organize entries by configurable colors, and use a Personal Agent to turn recent Gmail findings into dated entries.",
+    "category": "productivity",
+    "capabilities": [
+      {
+        "id": "local_app_data",
+        "title": "Keep notes locally",
+        "description": "Stores calendar entries and entry types inside the app private workspace."
+      },
+      {
+        "id": "agent_assisted_edits",
+        "title": "Work with a Personal Agent",
+        "description": "Lets an Agent review and update Focus entries using validated app tools."
+      },
+      {
+        "id": "gmail_assisted_planning",
+        "title": "Create entries from Gmail",
+        "description": "Uses the official Forger Gmail tool to search and read recent messages when the user asks."
+      }
+    ],
+    "supported_platforms": [
+      "darwin_arm64",
+      "darwin_x64"
+    ],
+    "beta": true
+  },
+  "agents": [
+    {
+      "id": "personal-agent",
+      "title": "Personal Agent",
+      "description": "Reviews the Focus calendar, organizes entries, and helps turn Gmail findings into calendar notes.",
+      "initialPrompt": "Act as a personal assistant for Focus. Focus is a local calendar notes app with configurable entry types. Use Focus MCP tools to inspect, create, update, delete, and bulk-create calendar entries when the user asks. Use list_entries and get_entry to view entries, update_entry to edit entries, and delete_entry only after confirmation for destructive changes. Prefer bulk_create_entries_by_type_name when creating entries from user-visible type names such as Summary, Appointment, Deadline, or Important. Summary entries are the all-day summary of one date; there must be at most one Summary entry per date. Before creating a Summary entry, inspect that date and update the existing Summary entry if one already exists. Use official Forger Gmail tools only when the app context allows them and the user asks to review email. Do not use Codex-local Gmail connectors, browser mail sessions, or non-Forger Gmail tools. Entries can have an optional HH:MM time; entries without a time are all-day entries. Use all-day entries when an email does not provide a clear time. Map findings to entry types named Summary, Appointment, Deadline, or Important unless the user asks otherwise. Before destructive changes or large edits, summarize the proposed change and ask for confirmation."
+    }
+  ],
+  "promptTemplates": [
+    {
+      "id": "email-focus-import",
+      "title": "Analyze recent Gmail",
+      "description": "Reads recent Gmail messages and creates Focus entries from appointments, deadlines, summaries, and important findings.",
+      "prompt": "Use only official Forger Gmail tools and Focus MCP tools. Analyze the last {{days}} days of Gmail messages. Search Gmail with a query appropriate for recent messages, read relevant threads, and identify distinct findings that should become Focus calendar entries. Create one entry per distinct non-summary finding using the Focus MCP tool bulk_create_entries_by_type_name. Use existing entry type names Summary, Appointment, Deadline, and Important. Summary is the all-day summary for one date and must not be duplicated. Before writing Summary content, inspect that date's entries; update the existing Summary entry when present and create one only when none exists. If a clear date exists, use that date. If no clear date exists, use today's date. If a clear HH:MM time exists, set time to HH:MM for non-summary entries; Summary entries stay all-day. Use source 'gmail' and include available Gmail message or thread ids. Do not send email. Avoid duplicates when the same finding appears in a thread. Return a concise Markdown summary of created or updated entries and any skipped ambiguous findings."
+    }
+  ],
+  "services": [
+    {
+      "name": "backend",
+      "type": "http",
+      "context": "./backend",
+      "port": 8006,
+      "command": "uv run fastapi dev src/app/main.py --host 0.0.0.0 --port 8006",
+      "healthcheck": "/api/health",
+      "environment": {
+        "DATABASE_URL": "sqlite:///{app_data}/focus.sqlite",
+        "CORS_ORIGINS": "http://localhost:5186,http://127.0.0.1:5186"
+      },
+      "volumes": [
+        {
+          "source": "./backend",
+          "target": "/app"
+        },
+        {
+          "source": "./backend/data",
+          "target": "/app/data",
+          "persist": true
+        }
+      ]
+    },
+    {
+      "name": "frontend",
+      "type": "http",
+      "context": "./frontend",
+      "port": 5186,
+      "command": "npm run dev -- --host 0.0.0.0 --port 5186",
+      "environment": {
+        "VITE_API_BASE_URL": "http://localhost:8006"
+      },
+      "depends_on": [
+        "backend"
+      ]
+    }
+  ],
+  "mcp": {
+    "type": "http",
+    "context": "./backend",
+    "command": "python -m app.mcp_server",
+    "healthcheck": "/health",
+    "environment": {
+      "DATABASE_URL": "sqlite:///{app_data}/focus.sqlite",
+      "PYTHONPATH": "./src"
+    },
+    "toolTimeoutSec": 600
+  },
+  "tools": {
+    "required": [
+      {
+        "toolId": "gmail",
+        "actions": [
+          "gmail.search_messages",
+          "gmail.read_thread"
+        ],
+        "reason": "Focus uses Gmail search and read access to create calendar entries from recent email when the user requests it."
+      }
+    ],
+    "optional": []
+  },
+  "scripts": {
+    "verify": "cd backend && uv run --extra dev pytest && cd ../frontend && npm run verify"
+  },
+  "skills": [
+    "./skills/stack-database-extension"
+  ]
+}
