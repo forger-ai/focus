@@ -180,6 +180,7 @@ export default function App() {
   }).format(month);
 
   const agentContext = [
+    `Response language: ${locale}`,
     `Visible Focus entries this month: ${entries.length}`,
     `Entry types: ${entryTypes.map((entryType) => entryType.name).join(", ")}`,
   ].join("\n");

@@ -2,12 +2,13 @@ import { Email } from "@mui/icons-material";
 import { Alert, Button, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { defaultImportDays } from "../../constants";
-import { useI18n } from "../../i18n";
+import { useI18n, useLocale } from "../../i18n";
 import { startEmailImportTask } from "../../utils/forgerTasks";
 import { TaskStatus } from "../tasks/TaskStatus";
 
 export function EmailImportView({ onImported }: { onImported: () => void }) {
   const t = useI18n();
+  const locale = useLocale();
   const [days, setDays] = useState(defaultImportDays);
   const [task, setTask] = useState<ForgerCodexTask | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export function EmailImportView({ onImported }: { onImported: () => void }) {
   async function startImport() {
     setError(null);
     try {
-      const started = await startEmailImportTask(days);
+      const started = await startEmailImportTask(days, locale);
       setTask(started);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.errors.importStart);
