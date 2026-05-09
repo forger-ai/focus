@@ -5,6 +5,8 @@ type ForgerAgent = {
   title: string;
   description?: string;
   initialPrompt: string;
+  model?: string;
+  reasoningEffort?: "low" | "medium" | "high" | "xhigh";
 };
 
 type ForgerAppContext = {
@@ -60,12 +62,20 @@ type ForgerCodexTaskEvent = {
   task: ForgerCodexTask;
 };
 
+type ForgerCodexTaskArgumentValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { type: "string"; value: string };
+
 interface Window {
   forgerApp?: {
     getContext: () => Promise<ForgerAppContext>;
     startCodexTask: (input: {
       templateId: string;
       locale?: string;
+      arguments?: Record<string, ForgerCodexTaskArgumentValue>;
       variables?: Record<string, string | number | boolean | null>;
     }) => Promise<ForgerCodexTask>;
     getCodexTask: (runId: string) => Promise<ForgerCodexTask | null>;

@@ -1,8 +1,17 @@
 {
   "name": "focus",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Local calendar notes app with configurable entry types, Personal Agent support, and Gmail-assisted entry creation.",
   "changelog": [
+    {
+      "version": "0.1.2",
+      "summary": "Localizes Focus assistant tasks.",
+      "changes": [
+        "Passes the app locale into Gmail-assisted Focus imports so task progress and summaries use the selected language.",
+        "Adds response-language context to the Personal Agent.",
+        "Adds explicit model and reasoning effort metadata to the Personal Agent and Gmail import prompt."
+      ]
+    },
     {
       "version": "0.1.1",
       "summary": "Adds the Focus catalog icon.",
@@ -70,7 +79,9 @@
       "id": "personal-agent",
       "title": "Personal Agent",
       "description": "Reviews the Focus calendar, organizes entries, and helps turn Gmail findings into calendar notes.",
-      "initialPrompt": "Act as a personal assistant for Focus. Focus is a local calendar notes app with configurable entry types. Use Focus MCP tools to inspect, create, update, delete, and bulk-create calendar entries when the user asks. Use list_entries and get_entry to view entries, update_entry to edit entries, and delete_entry only after confirmation for destructive changes. Prefer bulk_create_entries_by_type_name when creating entries from user-visible type names such as Summary, Appointment, Deadline, or Important. Summary entries are the all-day summary of one date; there must be at most one Summary entry per date. Before creating a Summary entry, inspect that date and update the existing Summary entry if one already exists. Use official Forger Gmail tools only when the app context allows them and the user asks to review email. Do not use Codex-local Gmail connectors, browser mail sessions, or non-Forger Gmail tools. Entries can have an optional HH:MM time; entries without a time are all-day entries. Use all-day entries when an email does not provide a clear time. Map findings to entry types named Summary, Appointment, Deadline, or Important unless the user asks otherwise. Before destructive changes or large edits, summarize the proposed change and ask for confirmation."
+      "model": "gpt-5.4",
+      "reasoningEffort": "medium",
+      "initialPrompt": "Act as a personal assistant for Focus. Focus is a local calendar notes app with configurable entry types. Write every progress message and final answer in the response language provided by the app context. If the response language is es, use Spanish. If it is en, use English. Use Focus MCP tools to inspect, create, update, delete, and bulk-create calendar entries when the user asks. Use list_entries and get_entry to view entries, update_entry to edit entries, and delete_entry only after confirmation for destructive changes. Prefer bulk_create_entries_by_type_name when creating entries from user-visible type names such as Summary, Appointment, Deadline, or Important. Summary entries are the all-day summary of one date; there must be at most one Summary entry per date. Before creating a Summary entry, inspect that date and update the existing Summary entry if one already exists. Use official Forger Gmail tools only when the app context allows them and the user asks to review email. Do not use Codex-local Gmail connectors, browser mail sessions, or non-Forger Gmail tools. Entries can have an optional HH:MM time; entries without a time are all-day entries. Use all-day entries when an email does not provide a clear time. Map findings to entry types named Summary, Appointment, Deadline, or Important unless the user asks otherwise. Before destructive changes or large edits, summarize the proposed change and ask for confirmation."
     }
   ],
   "promptTemplates": [
@@ -78,7 +89,9 @@
       "id": "email-focus-import",
       "title": "Analyze recent Gmail",
       "description": "Reads recent Gmail messages and creates Focus entries from appointments, deadlines, summaries, and important findings.",
-      "prompt": "Use only official Forger Gmail tools and Focus MCP tools. Analyze the last {{days}} days of Gmail messages. Search Gmail with a query appropriate for recent messages, read relevant threads, and identify distinct findings that should become Focus calendar entries. Create one entry per distinct non-summary finding using the Focus MCP tool bulk_create_entries_by_type_name. Use existing entry type names Summary, Appointment, Deadline, and Important. Summary is the all-day summary for one date and must not be duplicated. Before writing Summary content, inspect that date's entries; update the existing Summary entry when present and create one only when none exists. If a clear date exists, use that date. If no clear date exists, use today's date. If a clear HH:MM time exists, set time to HH:MM for non-summary entries; Summary entries stay all-day. Use source 'gmail' and include available Gmail message or thread ids. Do not send email. Avoid duplicates when the same finding appears in a thread. Return a concise Markdown summary of created or updated entries and any skipped ambiguous findings."
+      "model": "gpt-5.4",
+      "reasoningEffort": "medium",
+      "prompt": "Use only official Forger Gmail tools and Focus MCP tools.\n\nResponse language:\n{{locale}}\n\nInstructions:\n1. Write every progress message and the final answer in the requested language. If the language is es, use Spanish. If it is en, use English.\n2. Analyze the last {{days}} days of Gmail messages.\n3. Search Gmail with a query appropriate for recent messages, read relevant threads, and identify distinct findings that should become Focus calendar entries.\n4. Create one entry per distinct non-summary finding using the Focus MCP tool bulk_create_entries_by_type_name.\n5. Use existing entry type names Summary, Appointment, Deadline, and Important.\n6. Summary is the all-day summary for one date and must not be duplicated. Before writing Summary content, inspect that date's entries; update the existing Summary entry when present and create one only when none exists.\n7. If a clear date exists, use that date. If no clear date exists, use today's date.\n8. If a clear HH:MM time exists, set time to HH:MM for non-summary entries; Summary entries stay all-day.\n9. Use source 'gmail' and include available Gmail message or thread ids.\n10. Do not send email.\n11. Avoid duplicates when the same finding appears in a thread.\n\nFinal answer:\nReturn a concise Markdown summary of created or updated entries and any skipped ambiguous findings."
     }
   ],
   "services": [
